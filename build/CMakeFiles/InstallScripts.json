@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/nix/CPP/ConLogParser/build/cmake_install.cmake",
+		"/home/nix/CPP/ConLogParser/build/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
