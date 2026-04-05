@@ -1,1 +1,0 @@
-/usr/bin/clang++ -g -fsanitize=address -Xlinker --dependency-file=CMakeFiles/conlog_parser.dir/link.d CMakeFiles/conlog_parser.dir/main.cpp.o -o conlog_parser  libconlog_core.a /usr/lib/libtbb.so.12.17

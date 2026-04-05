@@ -1,6 +1,0 @@
-/home/nix/CPP/ConLogParser/build/CMakeFiles/edit_cache.dir
-/home/nix/CPP/ConLogParser/build/CMakeFiles/rebuild_cache.dir
-/home/nix/CPP/ConLogParser/build/src/CMakeFiles/conlog_core.dir
-/home/nix/CPP/ConLogParser/build/src/CMakeFiles/conlog_parser.dir
-/home/nix/CPP/ConLogParser/build/src/CMakeFiles/edit_cache.dir
-/home/nix/CPP/ConLogParser/build/src/CMakeFiles/rebuild_cache.dir
