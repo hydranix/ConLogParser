@@ -6,15 +6,19 @@
 #include <conlog/parser/parsers/SuicideParser.hpp>
 #include <conlog/parser/parsers/PlayerConnectedParser.hpp>
 #include <conlog/parser/parsers/ChatParser.hpp>
+#include <conlog/parser/parsers/PingParser.hpp>
 #include <conlog/events/EventBus.hpp>
 #include <conlog/events/Events.hpp>
 
+#include <chrono>
 #include <csignal>
 #include <memory>
 #include <mutex>
 #include <print>
 #include <stop_token>
 #include <thread>
+#include <utility>
+#include <vector>
 
 namespace conlog {
 
@@ -143,6 +147,10 @@ int App::run()
         return 1;
     }
 
+    if (wait_for_window_focus()) {
+        issue_initial_ping();
+    }
+
     m_process_guard.monitor_async(*pid,
         [this] {
             std::println("cstrike_linux64 exited. Shutting down.");
@@ -161,6 +169,62 @@ int App::run()
 
     shutdown();
     return 0;
+}
+
+bool App::wait_for_window_focus()
+{
+    using namespace std::chrono_literals;
+
+    {
+        std::lock_guard plock{m_print_mutex};
+        std::println("Waiting for CS:S window to gain focus...");
+    }
+
+    auto st = m_stop_source.get_token();
+    while (!st.stop_requested()) {
+        auto focused = m_window_checker.is_css_focused();
+        if (focused && *focused) {
+            std::lock_guard plock{m_print_mutex};
+            std::println("CS:S window is focused.");
+            return true;
+        }
+        std::this_thread::sleep_for(500ms);
+    }
+    return false;
+}
+
+void App::issue_initial_ping()
+{
+    auto on_done = [this](std::vector<std::string> names) {
+        {
+            std::lock_guard rlock{m_roster_mutex};
+            if (!names.empty()) {
+                m_local_player = names.front();
+                m_player_roster.assign(
+                    std::make_move_iterator(names.begin() + 1),
+                    std::make_move_iterator(names.end()));
+            }
+        }
+        {
+            std::lock_guard plock{m_print_mutex};
+            std::lock_guard rlock{m_roster_mutex};
+            std::println("[INIT] local player: {}", m_local_player);
+            for (const auto& p : m_player_roster) {
+                std::println("[INIT] player: {}", p);
+            }
+        }
+        m_registry.deregister_parser("ping");
+    };
+
+    m_registry.register_parser("ping",
+        std::make_shared<PingParser>(std::move(on_done)));
+
+    auto exec_result = m_dyncmd.exec("ping");
+    if (!exec_result) {
+        std::lock_guard plock{m_print_mutex};
+        std::println(stderr, "DynCmd ping failed: {}", exec_result.error());
+        m_registry.deregister_parser("ping");
+    }
 }
 
 void App::shutdown()

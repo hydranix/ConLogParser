@@ -3,6 +3,11 @@
 #include <condition_variable>
 #include <mutex>
 #include <stop_token>
+#include <string>
+#include <vector>
+
+#include <dyncmd/DynCmd.hpp>
+#include <dyncmd/WindowChecker.hpp>
 
 #include "conlog/events/EventBus.hpp"
 #include "conlog/parser/ParserRegistry.hpp"
@@ -21,6 +26,8 @@ public:
 
 private:
     void register_default_parsers();
+    [[nodiscard]] bool wait_for_window_focus();
+    void issue_initial_ping();
     void shutdown();
 
     // m_stop_source MUST be declared before m_process_guard, m_file_watcher
@@ -39,6 +46,13 @@ private:
 
     // Mutex protecting stdout writes from parallel parser callbacks.
     std::mutex       m_print_mutex;
+
+    dyncmd::DynCmd        m_dyncmd;
+    dyncmd::WindowChecker m_window_checker;
+
+    std::mutex               m_roster_mutex;
+    std::string              m_local_player;
+    std::vector<std::string> m_player_roster;
 };
 
 } // namespace conlog
